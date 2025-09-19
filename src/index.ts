@@ -28,15 +28,41 @@ interface WakaTimeSummary {
 	}[];
 }
 
+// Helper function to create CORS headers
+function getCorsHeaders(origin: string | null): HeadersInit {
+	const allowedOrigins = ['https://nur.codes', 'http://localhost:3000'];
+	const isAllowedOrigin = origin && allowedOrigins.some(allowed => origin.includes(allowed.replace(/^https?:\/\//, '')));
+	
+	return {
+		'Access-Control-Allow-Origin': isAllowedOrigin ? origin : 'https://nur.codes',
+		'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+		'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+		'Access-Control-Max-Age': '86400',
+	};
+}
+
 export default {
 	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+		const origin = request.headers.get('origin') || request.headers.get('referer');
+		const corsHeaders = getCorsHeaders(origin);
+
+		// Handle preflight OPTIONS request
+		if (request.method === 'OPTIONS') {
+			return new Response(null, {
+				status: 204,
+				headers: corsHeaders,
+			});
+		}
+
 		try {
-			// --- Allow requests only from nur.codes ---
-			const origin = request.headers.get('origin') || request.headers.get('referer');
-			if (!origin || !origin.includes('nur.codes')) {
+			// Origin validation
+			if (!origin || (!origin.includes('nur.codes') && !origin.includes('localhost:3000'))) {
 				return new Response(JSON.stringify({ error: 'Forbidden' }), {
 					status: 403,
-					headers: { 'content-type': 'application/json' },
+					headers: { 
+						'content-type': 'application/json',
+						...corsHeaders,
+					},
 				});
 			}
 
@@ -83,6 +109,7 @@ export default {
 					headers: {
 						'Content-Type': 'image/webp',
 						'Cache-Control': 'private, max-age=0, no-cache, no-store, must-revalidate',
+						...corsHeaders,
 					},
 				});
 			}
@@ -121,11 +148,16 @@ export default {
 				username: env.GITHUB_USERNAME,
 				total_commits: totalCommits,
 				time_coded: timeCodedToday,
+			}, {
+				headers: corsHeaders,
 			});
 		} catch (err: any) {
 			return new Response(JSON.stringify({ error: err.message }), {
 				status: 500,
-				headers: { 'content-type': 'application/json' },
+				headers: { 
+					'content-type': 'application/json',
+					...corsHeaders,
+				},
 			});
 		}
 	},
