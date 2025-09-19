@@ -1,18 +1,49 @@
-/**
- * Welcome to Cloudflare Workers! This is your first worker.
- *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
- *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
- */
+import { Octokit } from "@octokit/rest";
+// interface Env {
+//   GITHUB_TOKEN: string;
+//   GITHUB_USERNAME: string;
+// }
 
 export default {
 	async fetch(request, env, ctx): Promise<Response> {
-		return new Response('Hello World!');
+		const url = new URL(request.url);
+
+		// If user visits /api, return today's commit count
+		if (url.pathname === "/api") {
+			try {
+				// Init Octokit with token
+				const octokit = new Octokit({
+					auth: env.GITHUB_TOKEN,
+				});
+
+				// Get today's date in UTC YYYY-MM-DD
+				const today = new Date().toISOString().split("T")[0];
+
+				// Search commits for this user on today's date
+				const response = await octokit.request("GET /search/commits", {
+					q: `author:${env.GITHUB_USERNAME} committer-date:${today}`,
+					headers: {
+						accept: "application/vnd.github.cloak-preview+json",
+					},
+				});
+
+				return Response.json({
+					date: today,
+					username: env.GITHUB_USERNAME,
+					total_commits: response.data.total_count,
+				});
+			} catch (err: any) {
+				return new Response(
+					JSON.stringify({ error: err.message }),
+					{ status: 500, headers: { "content-type": "application/json" } }
+				);
+			}
+		}
+
+		// Default route
+		return new Response("Hello World!");
 	},
 } satisfies ExportedHandler<Env>;
+
+
+
