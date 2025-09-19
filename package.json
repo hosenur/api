@@ -16,6 +16,8 @@
 		"wrangler": "^4.38.0"
 	},
 	"dependencies": {
-		"@octokit/rest": "^22.0.0"
+		"@octokit/rest": "^22.0.0",
+		"@takumi-rs/helpers": "^0.31.4",
+		"@takumi-rs/wasm": "^0.31.4"
 	}
 }

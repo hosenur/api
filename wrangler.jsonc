@@ -7,6 +7,13 @@
 	"name": "api",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-09-19",
+	"rules": [
+		{
+			"type": "Data",
+			"globs": ["**/*.ttf", "**/*.woff", "**/*.woff2"],
+			"fallthrough": true
+		}
+	],
 	"observability": {
 		"enabled": true
 	}
