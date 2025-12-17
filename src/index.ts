@@ -6,6 +6,8 @@ import module from '@takumi-rs/wasm/takumi_wasm_bg.wasm';
 import medium from '../fonts/jakarta.ttf';
 // @ts-ignore
 import departureMono from '../fonts/DepartureMono-Regular.otf';
+// @ts-ignore
+import paperMono from '../fonts/PaperMono-Regular.otf';
 import { fetchLogo } from './utils';
 
 interface Env {
@@ -19,9 +21,13 @@ initSync({ module });
 const renderer = new Renderer();
 renderer.loadFont(new Uint8Array(medium));
 
-// Renderer with Departure Mono font for openportal.space
+// Renderer with Departure Mono font for openportal.space title
 const departureRenderer = new Renderer();
 departureRenderer.loadFont(new Uint8Array(departureMono));
+
+// Renderer with Paper Mono font for openportal.space description
+const paperRenderer = new Renderer();
+paperRenderer.loadFont(new Uint8Array(paperMono));
 
 let logo: string;
 
@@ -64,12 +70,13 @@ export default {
 				const title = url.searchParams.get('title') || 'Open Portal';
 				const description = url.searchParams.get('description') || '';
 
-				const webp = departureRenderer.render(
+				// Render title with Departure Mono
+				const titleImage = departureRenderer.render(
 					container({
 						style: {
 							width: percentage(100),
 							height: percentage(100),
-							backgroundColor: '#0a0a0a',
+							backgroundColor: '#ffffff',
 							padding: rem(4),
 							flexDirection: 'column',
 							justifyContent: 'center',
@@ -78,16 +85,47 @@ export default {
 						children: [
 							text(title, {
 								fontSize: 72,
-								color: '#ffffff',
+								color: '#0a0a0a',
 							}),
-							...(description
-								? [
-										text(description, {
-											fontSize: 32,
-											color: '#a1a1aa',
-										}),
-									]
-								: []),
+						],
+					}),
+					1200,
+					630,
+					'webp'
+				);
+
+				// If no description, return title-only image
+				if (!description) {
+					return new Response(titleImage, {
+						headers: {
+							'Content-Type': 'image/webp',
+							'Cache-Control': 'public, max-age=31536000',
+							...corsHeaders,
+						},
+					});
+				}
+
+				// Render full image with description using Paper Mono
+				const webp = paperRenderer.render(
+					container({
+						style: {
+							width: percentage(100),
+							height: percentage(100),
+							backgroundColor: '#ffffff',
+							padding: rem(4),
+							flexDirection: 'column',
+							justifyContent: 'center',
+							gap: rem(1.5),
+						},
+						children: [
+							text(title, {
+								fontSize: 72,
+								color: '#0a0a0a',
+							}),
+							text(description, {
+								fontSize: 32,
+								color: '#52525b',
+							}),
 						],
 					}),
 					1200,
