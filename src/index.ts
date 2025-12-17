@@ -25,9 +25,10 @@ renderer.loadFont(new Uint8Array(medium));
 const departureRenderer = new Renderer();
 departureRenderer.loadFont(new Uint8Array(departureMono));
 
-// Renderer with Paper Mono font for openportal.space description
-const paperRenderer = new Renderer();
-paperRenderer.loadFont(new Uint8Array(paperMono));
+// Renderer with both fonts for openportal.space (Departure Mono + Paper Mono)
+const openportalRenderer = new Renderer();
+openportalRenderer.loadFont(new Uint8Array(departureMono));
+openportalRenderer.loadFont(new Uint8Array(paperMono));
 
 let logo: string;
 
@@ -67,11 +68,11 @@ export default {
 
 			// --- OG image for openportal.space ---
 			if (url.pathname === '/openportal/og') {
-				const title = url.searchParams.get('title') || 'Open Portal';
+				const title = (url.searchParams.get('title') || 'Open Portal').toUpperCase();
 				const description = url.searchParams.get('description') || '';
 
-				// Render title with Departure Mono
-				const titleImage = departureRenderer.render(
+				// Render with openportalRenderer (has both Departure Mono + Paper Mono)
+				const webp = openportalRenderer.render(
 					container({
 						style: {
 							width: percentage(100),
@@ -87,45 +88,14 @@ export default {
 								fontSize: 72,
 								color: '#0a0a0a',
 							}),
-						],
-					}),
-					1200,
-					630,
-					'webp'
-				);
-
-				// If no description, return title-only image
-				if (!description) {
-					return new Response(titleImage, {
-						headers: {
-							'Content-Type': 'image/webp',
-							'Cache-Control': 'public, max-age=31536000',
-							...corsHeaders,
-						},
-					});
-				}
-
-				// Render full image with description using Paper Mono
-				const webp = paperRenderer.render(
-					container({
-						style: {
-							width: percentage(100),
-							height: percentage(100),
-							backgroundColor: '#ffffff',
-							padding: rem(4),
-							flexDirection: 'column',
-							justifyContent: 'center',
-							gap: rem(1.5),
-						},
-						children: [
-							text(title, {
-								fontSize: 72,
-								color: '#0a0a0a',
-							}),
-							text(description, {
-								fontSize: 32,
-								color: '#52525b',
-							}),
+							...(description
+								? [
+										text(description, {
+											fontSize: 32,
+											color: '#52525b',
+										}),
+									]
+								: []),
 						],
 					}),
 					1200,
