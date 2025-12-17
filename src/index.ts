@@ -58,10 +58,9 @@ export default {
 
 		try {
 			const url = new URL(request.url);
-			const host = request.headers.get('host') || '';
 
 			// --- OG image for openportal.space ---
-			if (host.includes('openportal.space') && url.pathname === '/og') {
+			if (url.pathname === '/openportal/og') {
 				const title = url.searchParams.get('title') || 'Open Portal';
 				const description = url.searchParams.get('description') || '';
 
