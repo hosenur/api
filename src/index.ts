@@ -87,12 +87,14 @@ export default {
 							text(title, {
 								fontSize: 72,
 								color: '#0a0a0a',
+								fontFamily: 'Departure Mono',
 							}),
 							...(description
 								? [
 										text(description, {
 											fontSize: 32,
 											color: '#52525b',
+											fontFamily: 'Paper Mono',
 										}),
 									]
 								: []),
