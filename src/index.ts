@@ -4,6 +4,8 @@ import { initSync, Renderer } from '@takumi-rs/wasm';
 import module from '@takumi-rs/wasm/takumi_wasm_bg.wasm';
 // @ts-ignore
 import medium from '../fonts/jakarta.ttf';
+// @ts-ignore
+import departureMono from '../fonts/DepartureMono-Regular.otf';
 import { fetchLogo } from './utils';
 
 interface Env {
@@ -16,6 +18,11 @@ interface Env {
 initSync({ module });
 const renderer = new Renderer();
 renderer.loadFont(new Uint8Array(medium));
+
+// Renderer with Departure Mono font for openportal.space
+const departureRenderer = new Renderer();
+departureRenderer.loadFont(new Uint8Array(departureMono));
+
 let logo: string;
 
 // Minimal WakaTime response type
@@ -27,7 +34,7 @@ interface WakaTimeSummary {
 	}[];
 }
 
-// Helper function to create CORS headers
+// Helper function to create CORS headers - now allows all origins
 function getCorsHeaders(): HeadersInit {
 	return {
 		'Access-Control-Allow-Origin': '*',
@@ -51,6 +58,52 @@ export default {
 
 		try {
 			const url = new URL(request.url);
+			const host = request.headers.get('host') || '';
+
+			// --- OG image for openportal.space ---
+			if (host.includes('openportal.space') && url.pathname === '/og') {
+				const title = url.searchParams.get('title') || 'Open Portal';
+				const description = url.searchParams.get('description') || '';
+
+				const webp = departureRenderer.render(
+					container({
+						style: {
+							width: percentage(100),
+							height: percentage(100),
+							backgroundColor: '#0a0a0a',
+							padding: rem(4),
+							flexDirection: 'column',
+							justifyContent: 'center',
+							gap: rem(1.5),
+						},
+						children: [
+							text(title, {
+								fontSize: 72,
+								color: '#ffffff',
+							}),
+							...(description
+								? [
+										text(description, {
+											fontSize: 32,
+											color: '#a1a1aa',
+										}),
+									]
+								: []),
+						],
+					}),
+					1200,
+					630,
+					'webp'
+				);
+
+				return new Response(webp, {
+					headers: {
+						'Content-Type': 'image/webp',
+						'Cache-Control': 'public, max-age=31536000',
+						...corsHeaders,
+					},
+				});
+			}
 
 			// --- OG image path ---
 			if (url.pathname === '/og') {
@@ -98,24 +151,7 @@ export default {
 			}
 
 			// --- JSON stats path (default /) ---
-
-			// GitHub → use UTC start/end range
-			const startUTC = new Date();
-			startUTC.setUTCHours(0, 0, 0, 0);
-			const endUTC = new Date();
-			endUTC.setUTCHours(23, 59, 59, 999);
-
-			const startISO = startUTC.toISOString();
-			const endISO = endUTC.toISOString();
-
-			const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
-			const ghResponse = await octokit.request('GET /search/commits', {
-				q: `author:${env.GITHUB_USERNAME} committer-date:${startISO}..${endISO}`,
-				headers: { accept: 'application/vnd.github.cloak-preview+json' },
-			});
-			const totalCommits = ghResponse.data.total_count;
-
-			// WakaTime → use IST (Asia/Kolkata) date
+			const todayUTC = new Date().toISOString().split('T')[0];
 			const formatter = new Intl.DateTimeFormat('en-CA', {
 				timeZone: 'Asia/Kolkata',
 				year: 'numeric',
@@ -124,37 +160,38 @@ export default {
 			});
 			const todayIST = formatter.format(new Date());
 
-			const wakaResp = await fetch(
-				`https://wakatime.com/api/v1/users/current/summaries?start=${todayIST}&end=${todayIST}`,
-				{
-					headers: {
-						Authorization: 'Basic ' + btoa(env.WAKATIME_API_KEY + ':'),
-					},
-				}
-			);
+			const octokit = new Octokit({ auth: env.GITHUB_TOKEN });
+			const ghResponse = await octokit.request('GET /search/commits', {
+				q: `author:${env.GITHUB_USERNAME} committer-date:${todayUTC}`,
+				headers: { accept: 'application/vnd.github.cloak-preview+json' },
+			});
+			const totalCommits = ghResponse.data.total_count;
+
+			const wakaResp = await fetch(`https://wakatime.com/api/v1/users/current/summaries?start=${todayIST}&end=${todayIST}`, {
+				headers: {
+					Authorization: 'Basic ' + btoa(env.WAKATIME_API_KEY + ':'),
+				},
+			});
 
 			if (!wakaResp.ok) throw new Error(`WakaTime API error: ${wakaResp.status}`);
 
 			const wakaData: WakaTimeSummary = await wakaResp.json();
 			const timeCodedToday = wakaData.data?.[0]?.grand_total?.text || '0 mins';
 
-			return Response.json(
-				{
-					date_github_start: startISO,
-					date_github_end: endISO,
-					date_wakatime: todayIST,
-					username: env.GITHUB_USERNAME,
-					total_commits: totalCommits,
-					time_coded: timeCodedToday,
-				},
-				{
-					headers: corsHeaders,
-				}
-			);
+			return Response.json({
+				date_github: todayUTC,
+				date_wakatime: todayIST,
+				username: env.GITHUB_USERNAME,
+				total_commits: totalCommits,
+				time_coded: timeCodedToday,
+			}, {
+				headers: corsHeaders,
+			});
+
 		} catch (err: any) {
 			return new Response(JSON.stringify({ error: err.message }), {
 				status: 500,
-				headers: {
+				headers: { 
 					'content-type': 'application/json',
 					...corsHeaders,
 				},
