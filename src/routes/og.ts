@@ -1,12 +1,11 @@
 import { ImageResponse } from "@takumi-rs/image-response";
 import { HelloOG } from "../og/hello-og";
+import type { Context } from "elysia";
 
-export const ogHandler = async (request: Request) => {
+export const ogHandler = async ({ query }: Context) => {
   try {
-    // Parse URL to get query parameters
-    const url = new URL(request.url);
-    const title = url.searchParams.get('title') || 'hosenur.dev';
-    const description = url.searchParams.get('description') || 'Lorem ipsum dolor sit amet, consectetur adipis do eiusmodcing elit. Sed tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.';
+    const title = query.title || 'hosenur.dev';
+    const description = query.description || 'Lorem ipsum dolor sit amet, consectetur adipis do eiusmodcing elit. Sed tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.';
     
     // Use createElement to avoid JSX syntax in .ts file
     const { createElement } = await import('react');
