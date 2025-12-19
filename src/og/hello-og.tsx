@@ -9,6 +9,8 @@ const TwDiv = (props: TwProps) => {
   return <div tw={tw} style={style} {...rest}>{children}</div>;
 };
 
+
+    
 const TwImg = (props: TwProps & { src: string; alt?: string }) => {
   const { tw, src, alt, style, ...rest } = props;
   return <img tw={tw} src={src} alt={alt} style={style} {...rest} />;
@@ -24,21 +26,21 @@ const TwP = (props: TwProps) => {
   return <p tw={tw} style={style} {...rest}>{children}</p>;
 };
 
-export function HelloOG(props: { title: string; description: string }) {
-  const { title, description } = props;
+export function HelloOG(props: { title: string; description: string; cloudImage: string; anotherCloudImage: string }) {
+  const { title, description, cloudImage, anotherCloudImage } = props;
   return (
     <TwDiv tw="w-full h-full relative p-0" style={{ background: 'linear-gradient(to bottom right, #0284C7 0%, #BAE6FD 100%)' }}>
       {/* PNG Image - Positioned in top-left */}
       <TwImg 
         tw="w-auto h-64 object-contain absolute top-4 left-4 my-20" 
-        src="http://localhost:8080/assets/cloud.png"
+        src={cloudImage}
         alt="Hello World Image"
       />
       
       {/* Another PNG Image - Positioned in top-right */}
       <TwImg 
         tw="w-auto h-64 object-contain absolute top-4 right-4" 
-        src="http://localhost:8080/assets/another-cloud.png"
+        src={anotherCloudImage}
         alt="Another Cloud Image"
       />
       

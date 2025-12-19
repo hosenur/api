@@ -10,6 +10,6 @@ const app = new Elysia()
   .get('/og', ogHandler)
   .get('/assets/cloud.png', () => new Response(Bun.file(cloudPath)))
   .get('/assets/another-cloud.png', () => new Response(Bun.file(anotherCloudPath)))
-  .listen(8080);
+  .listen(3000);
 
 console.log(`Listening on ${app.server!.url}`);

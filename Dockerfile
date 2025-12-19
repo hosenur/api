@@ -22,4 +22,4 @@ ENV NODE_ENV=production
 
 CMD ["bun", "run", "src/main.ts"]
 
-EXPOSE 8080
+EXPOSE 3000
