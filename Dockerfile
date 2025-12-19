@@ -19,7 +19,7 @@ RUN bun build \
 	--outfile server \
 	src/main.ts
 
-FROM gcr.io/distroless/base
+FROM oven/bun:slim
 
 WORKDIR /app
 
