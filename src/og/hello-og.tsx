@@ -50,15 +50,15 @@ export function HelloOG(props: { title: string; description: string; cloudImage:
       {/* Hello World Text and Description - Left aligned */}
       <TwDiv tw="absolute left-16 bottom-16 flex flex-col items-start">
         <TwH1 
-          tw="text-4xl font-medium text-neutral-800"
-          style={{ fontFamily: 'Geist Mono', fontWeight: '500' }}
+          tw="text-4xl font-medium text-black max-w-md"
+          style={{ fontFamily: 'Instrument Serif', fontWeight: '400' }}
         >
           {title}
         </TwH1>
         
         {/* Dynamic description paragraph */}
-        <TwP tw="text-lg text-neutral-600 max-w-3xl mt-2 leading-relaxed"
-          style={{ fontFamily: 'Geist Mono', fontWeight: '400' }}
+        <TwP tw="text-lg text-neutral-800 max-w-3xl mt-2 leading-relaxed"
+          style={{ fontFamily: 'Geist Sans', fontWeight: '400' }}
         >
           {description}
         </TwP>

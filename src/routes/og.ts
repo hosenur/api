@@ -1,12 +1,33 @@
 import { Renderer } from "@takumi-rs/core";
 import { fromJsx } from "@takumi-rs/helpers/jsx";
 import { HelloOG } from "../og/hello-og";
-import { cloudPath, anotherCloudPath } from "../assets";
+import { cloudPath, anotherCloudPath, instrumentSerifPath, geistSansPath } from "../assets";
 import type { Context } from "elysia";
 import { createElement } from 'react';
 
-// Instantiate renderer once
-const renderer = new Renderer();
+// Load fonts
+const [instrumentSerifData, geistSansData] = await Promise.all([
+  Bun.file(instrumentSerifPath).arrayBuffer(),
+  Bun.file(geistSansPath).arrayBuffer(),
+]);
+
+// Instantiate renderer once with fonts
+const renderer = new Renderer({
+  fonts: [
+    {
+      name: 'Instrument Serif',
+      data: instrumentSerifData,
+      weight: 400,
+      style: 'normal',
+    },
+    {
+      name: 'Geist Sans',
+      data: geistSansData,
+      weight: 400,
+      style: 'normal',
+    },
+  ],
+});
 
 export const ogHandler = async ({ query }: Context) => {
   try {
@@ -14,10 +35,12 @@ export const ogHandler = async ({ query }: Context) => {
     const description = query.description || 'Lorem ipsum dolor sit amet, consectetur adipis do eiusmodcing elit. Sed tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.';
     
     // Load images
-    const cloudBuffer = await Bun.file(cloudPath).arrayBuffer();
+    const [cloudBuffer, anotherCloudBuffer] = await Promise.all([
+      Bun.file(cloudPath).arrayBuffer(),
+      Bun.file(anotherCloudPath).arrayBuffer(),
+    ]);
+
     const cloudImage = `data:image/png;base64,${Buffer.from(cloudBuffer).toString('base64')}`;
-    
-    const anotherCloudBuffer = await Bun.file(anotherCloudPath).arrayBuffer();
     const anotherCloudImage = `data:image/png;base64,${Buffer.from(anotherCloudBuffer).toString('base64')}`;
 
     // Create element with image data props
